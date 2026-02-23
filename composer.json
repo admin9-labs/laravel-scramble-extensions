@@ -5,10 +5,21 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "scramble", "openapi", "swagger"],
+    "authors": [
+        {
+            "name": "fengqiyue",
+            "email": "fengqiyue@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/admin9-labs/laravel-scramble-extensions",
+    "support": {
+        "issues": "https://github.com/admin9-labs/laravel-scramble-extensions/issues",
+        "source": "https://github.com/admin9-labs/laravel-scramble-extensions"
+    },
     "require": {
         "php": "^8.2",
         "dedoc/scramble": "^0.12 || ^0.13",
-        "mitoop/laravel-api-response": "^7.0",
+        "nikic/php-parser": "^4.0 || ^5.0",
         "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
@@ -16,6 +27,7 @@
         "orchestra/testbench": "^10.0"
     },
     "suggest": {
+        "mitoop/laravel-api-response": "Required for business response envelope wrapping (^7.0)",
         "mitoop/laravel-efficient-form-request": "Required for scene-based form request parameter extraction",
         "mitoop/laravel-query-builder": "Required for filter query parameter extraction"
     },

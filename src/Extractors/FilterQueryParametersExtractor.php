@@ -16,6 +16,8 @@ use ReflectionClass;
 
 class FilterQueryParametersExtractor implements ParameterExtractor
 {
+    private static array $resolvedClassNames = [];
+
     public function handle(RouteInfo $routeInfo, array $parameterExtractionResults): array
     {
         $filterClassName = $this->findFilterClassName($routeInfo);
@@ -84,6 +86,11 @@ class FilterQueryParametersExtractor implements ParameterExtractor
             return null;
         }
 
+        $cacheKey = $controllerClass.'::'.$shortName;
+        if (isset(self::$resolvedClassNames[$cacheKey])) {
+            return self::$resolvedClassNames[$cacheKey];
+        }
+
         $reflection = new ReflectionClass($controllerClass);
         $fileName = $reflection->getFileName();
         if (! $fileName) {
@@ -91,8 +98,15 @@ class FilterQueryParametersExtractor implements ParameterExtractor
         }
 
         $source = file_get_contents($fileName);
+        if ($source === false) {
+            return null;
+        }
+
         $parser = (new \PhpParser\ParserFactory)->createForHostVersion();
         $ast = $parser->parse($source);
+        if ($ast === null) {
+            return null;
+        }
 
         $nodeFinder = new NodeFinder;
         $useStmts = $nodeFinder->find($ast, fn (Node $node) => $node instanceof Node\Stmt\Use_);
@@ -101,14 +115,15 @@ class FilterQueryParametersExtractor implements ParameterExtractor
             foreach ($useStmt->uses as $use) {
                 $alias = $use->alias ? $use->alias->name : $use->name->getLast();
                 if ($alias === $shortName) {
-                    return $use->name->toString();
+                    return self::$resolvedClassNames[$cacheKey] = $use->name->toString();
                 }
             }
         }
 
         $namespace = $reflection->getNamespaceName();
+        $resolved = $namespace ? $namespace.'\\'.$shortName : $shortName;
 
-        return $namespace ? $namespace.'\\'.$shortName : $shortName;
+        return self::$resolvedClassNames[$cacheKey] = $resolved;
     }
 
     /**
@@ -155,7 +170,6 @@ class FilterQueryParametersExtractor implements ParameterExtractor
             $filter = new $filterClassName;
             $reflection = new ReflectionClass($filter);
             $method = $reflection->getMethod('rules');
-            $method->setAccessible(true);
             $rules = $method->invoke($filter);
 
             $fields = [];
@@ -166,7 +180,9 @@ class FilterQueryParametersExtractor implements ParameterExtractor
             }
 
             return $fields;
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            logger()->debug("ScrambleExtensions: Failed to extract filter fields from {$filterClassName}: {$e->getMessage()}");
+
             return [];
         }
     }
@@ -176,10 +192,13 @@ class FilterQueryParametersExtractor implements ParameterExtractor
         try {
             $reflection = new ReflectionClass($filterClassName);
             $property = $reflection->getProperty('allowedSorts');
-            $property->setAccessible(true);
 
-            return $property->getDefaultValue();
-        } catch (\Throwable) {
+            $default = $property->getDefaultValue();
+
+            return is_array($default) ? $default : [];
+        } catch (\Throwable $e) {
+            logger()->debug("ScrambleExtensions: Failed to extract allowed sorts from {$filterClassName}: {$e->getMessage()}");
+
             return [];
         }
     }

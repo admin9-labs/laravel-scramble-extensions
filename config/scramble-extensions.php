@@ -3,7 +3,7 @@
 return [
     'response' => [
         'enabled' => true,
-        'trait' => \Mitoop\Http\RespondsWithJson::class,
+        'trait' => 'Mitoop\\Http\\RespondsWithJson',
         'model_namespace' => 'App\\Models',
     ],
 

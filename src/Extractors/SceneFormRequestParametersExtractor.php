@@ -84,7 +84,9 @@ class SceneFormRequestParametersExtractor implements ParameterExtractor
             $instance = new $requestClassName;
 
             return app()->call([$instance, $sceneMethod]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            logger()->debug("ScrambleExtensions: Failed to resolve scene rules from {$requestClassName}::{$sceneMethod}: {$e->getMessage()}");
+
             return [];
         }
     }

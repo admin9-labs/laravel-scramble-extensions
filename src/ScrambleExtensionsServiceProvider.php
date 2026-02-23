@@ -8,12 +8,7 @@ use Admin9\ScrambleExtensions\Extractors\FilterQueryParametersExtractor;
 use Admin9\ScrambleExtensions\Extractors\SceneFormRequestParametersExtractor;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
-use Dedoc\Scramble\Support\OperationExtensions\DeprecationExtension;
 use Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor;
-use Dedoc\Scramble\Support\OperationExtensions\RequestBodyExtension;
-use Dedoc\Scramble\Support\OperationExtensions\RequestEssentialsExtension;
-use Dedoc\Scramble\Support\OperationExtensions\ResponseExtension;
-use Dedoc\Scramble\Support\OperationExtensions\ResponseHeadersExtension;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -34,7 +29,10 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
 
         $this->registerResponseExtensions();
         $this->registerParameterExtractors();
-        $this->registerDocumentTransformers();
+
+        if (config('scramble-extensions.response.enabled', true)) {
+            $this->registerDocumentTransformers();
+        }
     }
 
     private function registerResponseExtensions(): void
@@ -43,12 +41,12 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
             return;
         }
 
-        Scramble::configure()->operationTransformers->use([
-            RequestEssentialsExtension::class,
-            RequestBodyExtension::class,
-            ResponseExtension::class,
-            ResponseHeadersExtension::class,
-            DeprecationExtension::class,
+        $trait = config('scramble-extensions.response.trait');
+        if (! is_string($trait) || ! trait_exists($trait)) {
+            return;
+        }
+
+        Scramble::configure()->operationTransformers->append([
             BusinessResponseOperationExtension::class,
         ]);
 
@@ -85,6 +83,7 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
     private function registerDocumentTransformers(): void
     {
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
+            $toRemove = [];
             foreach ($openApi->components->schemas as $name => $schema) {
                 $type = $schema->type;
                 if (
@@ -93,8 +92,11 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
                     && $type->hasProperty('data')
                     && $type->hasProperty('total')
                 ) {
-                    $openApi->components->removeSchema($name);
+                    $toRemove[] = $name;
                 }
+            }
+            foreach ($toRemove as $name) {
+                $openApi->components->removeSchema($name);
             }
         });
     }
