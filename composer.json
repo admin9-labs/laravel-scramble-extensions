@@ -1,0 +1,39 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "admin9/laravel-scramble-extensions",
+    "description": "Scramble extensions for Laravel business-response APIs — auto-wraps OpenAPI docs with success/error envelope, scene-based form request extraction, and filter query parameter extraction.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "scramble", "openapi", "swagger"],
+    "require": {
+        "php": "^8.2",
+        "dedoc/scramble": "^0.12 || ^0.13",
+        "mitoop/laravel-api-response": "^7.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.24",
+        "orchestra/testbench": "^10.0"
+    },
+    "suggest": {
+        "mitoop/laravel-efficient-form-request": "Required for scene-based form request parameter extraction",
+        "mitoop/laravel-query-builder": "Required for filter query parameter extraction"
+    },
+    "autoload": {
+        "psr-4": {
+            "Admin9\\ScrambleExtensions\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Admin9\\ScrambleExtensions\\ScrambleExtensionsServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
