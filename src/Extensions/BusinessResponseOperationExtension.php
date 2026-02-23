@@ -53,6 +53,7 @@ class BusinessResponseOperationExtension extends OperationExtension
                 $response->setContent('application/json', Schema::fromType(
                     $this->wrapPaginated($resolvedType, $routeInfo)
                 ));
+                $response->description = 'Paginated list';
             } else {
                 $response->setContent('application/json', Schema::fromType(
                     $this->wrapStandard($originalType)

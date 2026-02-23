@@ -7,6 +7,7 @@ use Admin9\ScrambleExtensions\Extensions\BusinessResponseOperationExtension;
 use Admin9\ScrambleExtensions\Extractors\FilterQueryParametersExtractor;
 use Admin9\ScrambleExtensions\Extractors\SceneFormRequestParametersExtractor;
 use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\OperationExtensions\DeprecationExtension;
 use Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor;
 use Dedoc\Scramble\Support\OperationExtensions\RequestBodyExtension;
@@ -33,6 +34,7 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
 
         $this->registerResponseExtensions();
         $this->registerParameterExtractors();
+        $this->registerDocumentTransformers();
     }
 
     private function registerResponseExtensions(): void
@@ -78,5 +80,22 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
         if (! empty($extractors)) {
             Scramble::configure()->parametersExtractors->prepend($extractors);
         }
+    }
+
+    private function registerDocumentTransformers(): void
+    {
+        Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
+            foreach ($openApi->components->schemas as $name => $schema) {
+                $type = $schema->type;
+                if (
+                    $type instanceof \Dedoc\Scramble\Support\Generator\Types\ObjectType
+                    && $type->hasProperty('current_page')
+                    && $type->hasProperty('data')
+                    && $type->hasProperty('total')
+                ) {
+                    $openApi->components->removeSchema($name);
+                }
+            }
+        });
     }
 }
