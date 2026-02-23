@@ -67,9 +67,13 @@ class BusinessResponseOperationExtension extends OperationExtension
     private function resolveType(OpenApiType $type): OpenApiType
     {
         if ($type instanceof Reference) {
-            $resolved = $type->resolve();
+            try {
+                $resolved = $type->resolve();
 
-            return $resolved instanceof Schema ? $resolved->type : $type;
+                return $resolved instanceof Schema ? $resolved->type : $type;
+            } catch (\Throwable) {
+                return $type;
+            }
         }
 
         return $type;
@@ -98,7 +102,9 @@ class BusinessResponseOperationExtension extends OperationExtension
 
     private function wrapPaginated(OpenApiObjectType $paginatorType, RouteInfo $routeInfo): OpenApiObjectType
     {
-        $itemsType = $paginatorType->getProperty('data') ?? new OpenApiArrayType;
+        $itemsType = $paginatorType->hasProperty('data')
+            ? $paginatorType->getProperty('data')
+            : new OpenApiArrayType;
 
         if (! $itemsType instanceof OpenApiArrayType) {
             $modelSchema = $this->inferModelSchema($routeInfo);

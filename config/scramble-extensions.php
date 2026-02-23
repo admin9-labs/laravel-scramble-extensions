@@ -5,6 +5,7 @@ return [
         'enabled' => true,
         'trait' => 'Mitoop\\Http\\RespondsWithJson',
         'model_namespace' => 'App\\Models',
+        'column_comments' => true,
     ],
 
     'scene_form_request' => [

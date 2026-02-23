@@ -18,6 +18,11 @@ class FilterQueryParametersExtractor implements ParameterExtractor
 {
     private static array $resolvedClassNames = [];
 
+    public static function resetCache(): void
+    {
+        self::$resolvedClassNames = [];
+    }
+
     public function handle(RouteInfo $routeInfo, array $parameterExtractionResults): array
     {
         $filterClassName = $this->findFilterClassName($routeInfo);

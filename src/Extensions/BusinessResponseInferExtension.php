@@ -25,15 +25,33 @@ use Illuminate\Pagination\Paginator;
  */
 class BusinessResponseInferExtension implements MethodReturnTypeExtension
 {
+    private static ?string $cachedTrait = null;
+
+    private static bool $traitResolved = false;
+
+    public static function resetCache(): void
+    {
+        self::$cachedTrait = null;
+        self::$traitResolved = false;
+    }
+
     public function shouldHandle(ObjectType $type): bool
     {
-        $trait = config('scramble-extensions.response.trait');
+        if (! self::$traitResolved) {
+            $trait = config('scramble-extensions.response.trait');
+            self::$cachedTrait = is_string($trait) && trait_exists($trait) ? $trait : null;
+            self::$traitResolved = true;
+        }
 
-        if (! $trait || ! trait_exists($trait)) {
+        if (self::$cachedTrait === null) {
             return false;
         }
 
-        return in_array($trait, class_uses_recursive($type->name));
+        if (! class_exists($type->name)) {
+            return false;
+        }
+
+        return in_array(self::$cachedTrait, class_uses_recursive($type->name));
     }
 
     public function getMethodReturnType(MethodCallEvent $event): ?Type

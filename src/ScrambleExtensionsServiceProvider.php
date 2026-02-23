@@ -4,6 +4,7 @@ namespace Admin9\ScrambleExtensions;
 
 use Admin9\ScrambleExtensions\Extensions\BusinessResponseInferExtension;
 use Admin9\ScrambleExtensions\Extensions\BusinessResponseOperationExtension;
+use Admin9\ScrambleExtensions\Extensions\ModelColumnDescriptionExtension;
 use Admin9\ScrambleExtensions\Extractors\FilterQueryParametersExtractor;
 use Admin9\ScrambleExtensions\Extractors\SceneFormRequestParametersExtractor;
 use Dedoc\Scramble\Scramble;
@@ -51,6 +52,10 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
         ]);
 
         Scramble::registerExtension(BusinessResponseInferExtension::class);
+
+        if (config('scramble-extensions.response.column_comments', true)) {
+            Scramble::registerExtension(ModelColumnDescriptionExtension::class);
+        }
     }
 
     private function registerParameterExtractors(): void
