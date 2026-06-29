@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.0 - 2026-06-30
+
+### Added
+- Laravel 13 support with Scramble `^0.13.30` as the baseline.
+- PHPUnit/Testbench coverage for business response envelopes, Mitoop scene form requests, Mitoop filter query parameters, and model column comments.
+- README positioning that identifies this package as a Mitoop ecosystem adapter rather than a general-purpose Scramble extension.
+
+### Changed
+- Require PHP `^8.3` for the Laravel 13 support line.
+- Upgrade development dependencies to Testbench `^11.0` and PHPUnit `^11.5 || ^12.5`.
+
 ## v0.2.0 - 2026-02-24
 
 ### Added

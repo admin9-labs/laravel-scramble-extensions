@@ -17,14 +17,15 @@
         "source": "https://github.com/admin9-labs/laravel-scramble-extensions"
     },
     "require": {
-        "php": "^8.2",
-        "dedoc/scramble": "^0.12 || ^0.13",
+        "php": "^8.3",
+        "dedoc/scramble": "^0.13.30",
         "nikic/php-parser": "^4.0 || ^5.0",
         "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
         "laravel/pint": "^1.24",
-        "orchestra/testbench": "^10.0"
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^11.5 || ^12.5"
     },
     "suggest": {
         "mitoop/laravel-api-response": "Required for business response envelope wrapping (^7.0)",
@@ -35,6 +36,18 @@
         "psr-4": {
             "Admin9\\ScrambleExtensions\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Admin9\\ScrambleExtensions\\Tests\\": "tests/",
+            "Mitoop\\Http\\": "tests/Fixtures/Mitoop/Http/",
+            "Mitoop\\LaravelEfficientFormRequest\\": "tests/Fixtures/Mitoop/LaravelEfficientFormRequest/",
+            "Mitoop\\LaravelQueryBuilder\\": "tests/Fixtures/Mitoop/LaravelQueryBuilder/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "format:test": "pint --test"
     },
     "extra": {
         "laravel": {

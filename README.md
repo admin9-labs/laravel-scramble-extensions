@@ -1,14 +1,27 @@
 # Laravel Scramble Extensions
 
-为 Laravel 业务接口量身定制的 [Scramble](https://scramble.dedoc.co/) (OpenAPI 文档生成器) 扩展包。
+面向 Mitoop 生态业务接口约定的 [Scramble](https://scramble.dedoc.co/) (OpenAPI 文档生成器) 适配包。
+
+> 这个包不是通用 Scramble 扩展。它服务于使用 `mitoop/laravel-api-response`、`mitoop/laravel-efficient-form-request`、`mitoop/laravel-query-builder` 的项目，把这些业务约定补充到 Scramble 生成的 OpenAPI 文档中。
+
+## 兼容性
+
+| Package | Version |
+| --- | --- |
+| PHP | `^8.3` |
+| Laravel | `^13.0` |
+| Scramble | `^0.13.30` |
+
+旧版 Laravel/Scramble 项目请继续使用本包 `v0.2.x`。
 
 主要功能：
 
 - 自动将 200 响应包装为统一的业务信封结构 `{success, code, message, data, [meta], request_id}`
 - 支持场景化表单请求 (Scene FormRequest) 的参数提取
 - 支持 Filter 查询参数自动提取（筛选字段、排序、分页）
+- 支持读取数据库字段注释并写入 OpenAPI schema description
 
-三个功能模块均可通过配置文件独立开启或关闭。
+各功能模块均可通过配置文件独立开启或关闭；未安装对应 Mitoop 包时，对应模块会自动跳过。
 
 ## 安装
 
@@ -24,7 +37,7 @@ php artisan vendor:publish --tag=scramble-extensions-config
 
 ### 可选依赖
 
-根据你使用的功能，按需安装对应的包：
+根据你使用的 Mitoop 约定，按需安装对应的包：
 
 ```bash
 # 业务响应信封包装
@@ -49,6 +62,8 @@ return [
         'trait' => 'Mitoop\\Http\\RespondsWithJson',
         // 模型命名空间，用于分页响应自动推断模型
         'model_namespace' => 'App\\Models',
+        // 从数据库字段注释生成 schema description
+        'column_comments' => true,
     ],
 
     'scene_form_request' => [
@@ -71,7 +86,7 @@ return [
 
 自动将所有 200 响应包装为统一的业务信封结构。
 
-控制器需要 use 配置中指定的 trait（默认 `Mitoop\Http\RespondsWithJson`），通过 `$this->success()`、`$this->error()`、`$this->deny()` 返回响应。
+控制器需要 use 配置中指定的 Mitoop trait（默认 `Mitoop\Http\RespondsWithJson`），通过 `$this->success()`、`$this->error()`、`$this->deny()` 返回响应。
 
 ```php
 class UserController extends Controller
@@ -201,6 +216,12 @@ class UserController extends Controller
 - `sort` — 排序字段，可选值 `created_at`、`name`，前缀 `-` 表示降序
 - `page_size` — 每页条数（默认 15，最大 100，可通过配置修改）
 - `page` — 页码
+
+### 4. 模型字段注释 (Column Comments)
+
+当模型字段在数据库 schema 中带有 comment 时，扩展会把 comment 写入对应 OpenAPI property 的 `description`。这用于让接口字段说明跟迁移/数据库字段注释保持一致。
+
+该能力依赖数据库驱动能通过 Laravel schema builder 返回 `comment` 字段；不支持字段注释的驱动会安全跳过。
 
 ## License
 

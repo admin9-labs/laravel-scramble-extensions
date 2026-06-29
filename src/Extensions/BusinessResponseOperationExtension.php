@@ -14,6 +14,7 @@ use Dedoc\Scramble\Support\Generator\Types\ObjectType as OpenApiObjectType;
 use Dedoc\Scramble\Support\Generator\Types\StringType as OpenApiStringType;
 use Dedoc\Scramble\Support\Generator\Types\Type as OpenApiType;
 use Dedoc\Scramble\Support\RouteInfo;
+use Dedoc\Scramble\Support\Type\ObjectType;
 
 /**
  * Wraps all 200 responses in the business envelope:
@@ -156,7 +157,7 @@ class BusinessResponseOperationExtension extends OperationExtension
             return null;
         }
 
-        $phpType = new \Dedoc\Scramble\Support\Type\ObjectType($modelClass);
+        $phpType = new ObjectType($modelClass);
 
         return $this->openApiTransformer->transform($phpType);
     }

@@ -9,7 +9,10 @@ use Admin9\ScrambleExtensions\Extractors\FilterQueryParametersExtractor;
 use Admin9\ScrambleExtensions\Extractors\SceneFormRequestParametersExtractor;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
 use Dedoc\Scramble\Support\OperationExtensions\ParameterExtractor\FormRequestParametersExtractor;
+use Mitoop\LaravelEfficientFormRequest\EfficientSceneFormRequest;
+use Mitoop\LaravelQueryBuilder\AbstractFilter;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -64,18 +67,18 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
 
         if (
             config('scramble-extensions.scene_form_request.enabled', true)
-            && class_exists(\Mitoop\LaravelEfficientFormRequest\EfficientSceneFormRequest::class)
+            && class_exists(EfficientSceneFormRequest::class)
         ) {
             $extractors[] = SceneFormRequestParametersExtractor::class;
 
             FormRequestParametersExtractor::ignoreInstanceOf(
-                \Mitoop\LaravelEfficientFormRequest\EfficientSceneFormRequest::class,
+                EfficientSceneFormRequest::class,
             );
         }
 
         if (
             config('scramble-extensions.filter.enabled', true)
-            && class_exists(\Mitoop\LaravelQueryBuilder\AbstractFilter::class)
+            && class_exists(AbstractFilter::class)
         ) {
             $extractors[] = FilterQueryParametersExtractor::class;
         }
@@ -92,7 +95,7 @@ class ScrambleExtensionsServiceProvider extends PackageServiceProvider
             foreach ($openApi->components->schemas as $name => $schema) {
                 $type = $schema->type;
                 if (
-                    $type instanceof \Dedoc\Scramble\Support\Generator\Types\ObjectType
+                    $type instanceof ObjectType
                     && $type->hasProperty('current_page')
                     && $type->hasProperty('data')
                     && $type->hasProperty('total')

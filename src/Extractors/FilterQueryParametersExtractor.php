@@ -12,6 +12,7 @@ use Dedoc\Scramble\Support\RouteInfo;
 use Mitoop\LaravelQueryBuilder\AbstractFilter;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
+use PhpParser\ParserFactory;
 use ReflectionClass;
 
 class FilterQueryParametersExtractor implements ParameterExtractor
@@ -107,7 +108,7 @@ class FilterQueryParametersExtractor implements ParameterExtractor
             return null;
         }
 
-        $parser = (new \PhpParser\ParserFactory)->createForHostVersion();
+        $parser = (new ParserFactory)->createForHostVersion();
         $ast = $parser->parse($source);
         if ($ast === null) {
             return null;
