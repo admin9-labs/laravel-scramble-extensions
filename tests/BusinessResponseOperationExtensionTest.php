@@ -10,6 +10,7 @@ use Dedoc\Scramble\OpenApiContext;
 use Dedoc\Scramble\Support\Generator\Components;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
+use Dedoc\Scramble\Support\Generator\Parameter;
 use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
 use Dedoc\Scramble\Support\Generator\Types\ArrayType;
@@ -63,6 +64,62 @@ class BusinessResponseOperationExtensionTest extends TestCase
             $schema['properties']['meta']['required'],
         );
         $this->assertArrayNotHasKey('current_page', $schema['properties']);
+    }
+
+    public function test_wraps_paginated_resource_collection_array_in_business_pagination_envelope(): void
+    {
+        $response = Response::make(200)
+            ->description('Paginated set of `UserResource`')
+            ->setContent('application/json', Schema::fromType((new ArrayType)->setItems(new StringType)));
+        $operation = Operation::make('get')->addResponse($response);
+
+        $this->extension()->handle($operation, $this->routeInfo('index'));
+
+        $schema = $operation->responses[0]->getContent('application/json')->toArray();
+
+        $this->assertSame('Paginated list', $operation->responses[0]->description);
+        $this->assertSame(['success', 'code', 'message', 'data', 'meta', 'request_id'], $schema['required']);
+        $this->assertSame('array', $schema['properties']['data']['type']);
+        $this->assertSame('string', $schema['properties']['data']['items']['type']);
+        $this->assertSame(
+            ['pagination', 'page', 'page_size', 'has_more', 'total'],
+            $schema['properties']['meta']['required'],
+        );
+    }
+
+    public function test_wraps_filter_paginated_array_response_in_business_pagination_envelope(): void
+    {
+        $operation = Operation::make('get')
+            ->addResponse(Response::make(200)->setContent(
+                'application/json',
+                Schema::fromType((new ArrayType)->setItems(new StringType)),
+            ))
+            ->addParameters([
+                Parameter::make('page_size', 'query'),
+                Parameter::make('page', 'query'),
+            ]);
+
+        $this->extension()->handle($operation, $this->routeInfo('index'));
+
+        $schema = $operation->responses[0]->getContent('application/json')->toArray();
+
+        $this->assertSame('Paginated list', $operation->responses[0]->description);
+        $this->assertSame(['success', 'code', 'message', 'data', 'meta', 'request_id'], $schema['required']);
+    }
+
+    public function test_keeps_bounded_array_response_as_standard_business_envelope(): void
+    {
+        $response = Response::make(200)
+            ->description('Array of `UserResource`')
+            ->setContent('application/json', Schema::fromType((new ArrayType)->setItems(new StringType)));
+        $operation = Operation::make('get')->addResponse($response);
+
+        $this->extension()->handle($operation, $this->routeInfo('index'));
+
+        $schema = $operation->responses[0]->getContent('application/json')->toArray();
+
+        $this->assertSame(['success', 'code', 'message', 'data', 'request_id'], $schema['required']);
+        $this->assertArrayNotHasKey('meta', $schema['properties']);
     }
 
     private function extension(): BusinessResponseOperationExtension

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.1 - 2026-06-30
+
+### Fixed
+- Preserve pagination metadata in business response envelopes for paginated resource collection responses.
+
 ## v0.3.0 - 2026-06-30
 
 ### Added

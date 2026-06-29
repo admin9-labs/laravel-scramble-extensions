@@ -4,6 +4,7 @@ namespace Admin9\ScrambleExtensions\Extensions;
 
 use Dedoc\Scramble\Extensions\OperationExtension;
 use Dedoc\Scramble\Support\Generator\Operation;
+use Dedoc\Scramble\Support\Generator\Parameter;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\Response;
 use Dedoc\Scramble\Support\Generator\Schema;
@@ -50,7 +51,7 @@ class BusinessResponseOperationExtension extends OperationExtension
 
             $resolvedType = $this->resolveType($originalType);
 
-            if ($this->isPaginatorSchema($resolvedType)) {
+            if ($this->isPaginatedResponse($response, $operation, $resolvedType)) {
                 $response->setContent('application/json', Schema::fromType(
                     $this->wrapPaginated($resolvedType, $routeInfo)
                 ));
@@ -88,6 +89,34 @@ class BusinessResponseOperationExtension extends OperationExtension
             && $type->hasProperty('total');
     }
 
+    private function isPaginatedResponse(Response $response, Operation $operation, OpenApiType $type): bool
+    {
+        if ($this->isPaginatorSchema($type)) {
+            return true;
+        }
+
+        if (! $type instanceof OpenApiArrayType) {
+            return false;
+        }
+
+        if (str_starts_with($response->description, 'Paginated set')) {
+            return true;
+        }
+
+        return $this->hasPaginationParameters($operation);
+    }
+
+    private function hasPaginationParameters(Operation $operation): bool
+    {
+        $queryParameters = collect($operation->parameters)
+            ->filter(fn ($parameter): bool => $parameter instanceof Parameter && $parameter->in === 'query')
+            ->pluck('name')
+            ->all();
+
+        return in_array('page', $queryParameters, true)
+            && in_array('page_size', $queryParameters, true);
+    }
+
     private function wrapStandard(OpenApiType $dataType): OpenApiObjectType
     {
         $envelope = new OpenApiObjectType;
@@ -101,11 +130,11 @@ class BusinessResponseOperationExtension extends OperationExtension
         return $envelope;
     }
 
-    private function wrapPaginated(OpenApiObjectType $paginatorType, RouteInfo $routeInfo): OpenApiObjectType
+    private function wrapPaginated(OpenApiType $paginatorType, RouteInfo $routeInfo): OpenApiObjectType
     {
-        $itemsType = $paginatorType->hasProperty('data')
+        $itemsType = $paginatorType instanceof OpenApiObjectType && $paginatorType->hasProperty('data')
             ? $paginatorType->getProperty('data')
-            : new OpenApiArrayType;
+            : $paginatorType;
 
         if (! $itemsType instanceof OpenApiArrayType) {
             $modelSchema = $this->inferModelSchema($routeInfo);
