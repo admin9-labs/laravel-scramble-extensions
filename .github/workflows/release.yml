@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, fileinfo, mbstring, xml, xmlwriter
+          coverage: none
+
+      - name: Validate composer metadata
+        run: composer validate --strict --ansi
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress --ansi
+
+      - name: Check platform requirements
+        run: composer check-platform-reqs
+
+      - name: Check PHP syntax
+        run: find src config tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Check code style
+        run: composer format:test
+
+      - name: Run tests
+        run: composer test
+
+      - name: Extract release notes
+        run: |
+          awk -v tag="$GITHUB_REF_NAME" '
+            BEGIN {
+              prefix = "## " tag
+            }
+            index($0, prefix) == 1 && (length($0) == length(prefix) || substr($0, length(prefix) + 1, 1) ~ /[[:space:]]/) {
+              found = 1
+              print
+              next
+            }
+            found && /^## / {
+              exit
+            }
+            found {
+              print
+            }
+          ' CHANGELOG.md > release-notes.md
+
+          test -s release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag
