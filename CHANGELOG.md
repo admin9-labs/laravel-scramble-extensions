@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.2 - 2026-06-30
+
+### Added
+- Add configurable business response schema overrides for fields Scramble cannot infer precisely.
+
+### Fixed
+- Document supported business error responses with their HTTP status codes instead of collapsing every error response to 200.
+
 ## v0.3.1 - 2026-06-30
 
 ### Fixed

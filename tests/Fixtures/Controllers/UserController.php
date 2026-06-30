@@ -33,4 +33,14 @@ class UserController extends Controller
     {
         return $this->success($request->validated());
     }
+
+    public function invalid(): mixed
+    {
+        return $this->error('Invalid user payload.', 422);
+    }
+
+    public function denied(): mixed
+    {
+        return $this->deny();
+    }
 }

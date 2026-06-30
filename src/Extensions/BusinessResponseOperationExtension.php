@@ -119,6 +119,8 @@ class BusinessResponseOperationExtension extends OperationExtension
 
     private function wrapStandard(OpenApiType $dataType): OpenApiObjectType
     {
+        $dataType = $this->normalizeBusinessDataType($dataType);
+
         $envelope = new OpenApiObjectType;
         $envelope->addProperty('success', (new OpenApiBooleanType)->setDescription('Whether the request was successful'));
         $envelope->addProperty('code', (new OpenApiIntegerType)->setDescription('Business status code, 0 = success'));
@@ -128,6 +130,45 @@ class BusinessResponseOperationExtension extends OperationExtension
         $envelope->setRequired(['success', 'code', 'message', 'data', 'request_id']);
 
         return $envelope;
+    }
+
+    private function normalizeBusinessDataType(OpenApiType $dataType): OpenApiType
+    {
+        if (! $dataType instanceof OpenApiObjectType) {
+            return $dataType;
+        }
+
+        $schemaOverrides = config('scramble-extensions.response.schema_overrides', []);
+        if (! is_array($schemaOverrides) || $schemaOverrides === []) {
+            return $dataType;
+        }
+
+        $normalizedType = null;
+
+        foreach ($schemaOverrides as $property => $schemaType) {
+            if (! is_string($property) || ! $dataType->hasProperty($property)) {
+                continue;
+            }
+
+            $propertyType = $this->schemaOverrideType($schemaType);
+            if (! $propertyType) {
+                continue;
+            }
+
+            $normalizedType ??= $dataType->clone();
+            $normalizedType->addProperty($property, $propertyType);
+        }
+
+        return $normalizedType ?? $dataType;
+    }
+
+    private function schemaOverrideType(mixed $schemaType): ?OpenApiType
+    {
+        if ($schemaType !== 'string_list') {
+            return null;
+        }
+
+        return (new OpenApiArrayType)->setItems(new OpenApiStringType);
     }
 
     private function wrapPaginated(OpenApiType $paginatorType, RouteInfo $routeInfo): OpenApiObjectType

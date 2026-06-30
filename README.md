@@ -64,6 +64,9 @@ return [
         'model_namespace' => 'App\\Models',
         // 从数据库字段注释生成 schema description
         'column_comments' => true,
+        // 修正业务响应 data 内 Scramble 无法精确推断的字段 schema
+        // 当前支持：string_list
+        'schema_overrides' => [],
     ],
 
     'scene_form_request' => [
@@ -135,6 +138,18 @@ class UserController extends Controller
   "request_id": "uuid7"
 }
 ```
+
+如果 Scramble 对某些业务响应字段推断过宽，可以通过 `schema_overrides` 收敛字段 schema：
+
+```php
+'response' => [
+    'schema_overrides' => [
+        'permission_names' => 'string_list',
+    ],
+],
+```
+
+`string_list` 会生成 `{"type":"array","items":{"type":"string"}}`，适合权限名、标签名等字符串列表字段。
 
 ### 2. 场景化表单请求提取 (Scene FormRequest)
 

@@ -7,6 +7,7 @@ use Admin9\ScrambleExtensions\Tests\Fixtures\Controllers\UserController;
 use Dedoc\Scramble\GeneratorConfig;
 use Dedoc\Scramble\Infer;
 use Dedoc\Scramble\OpenApiContext;
+use Dedoc\Scramble\Support\Generator\Combined\AnyOf;
 use Dedoc\Scramble\Support\Generator\Components;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\Operation;
@@ -120,6 +121,52 @@ class BusinessResponseOperationExtensionTest extends TestCase
 
         $this->assertSame(['success', 'code', 'message', 'data', 'request_id'], $schema['required']);
         $this->assertArrayNotHasKey('meta', $schema['properties']);
+    }
+
+    public function test_normalizes_configured_business_field_as_string_array(): void
+    {
+        config()->set('scramble-extensions.response.schema_overrides.permission_names', 'string_list');
+
+        $identityType = (new ObjectType)
+            ->addProperty('user', new ObjectType)
+            ->addProperty('permission_names', (new AnyOf)->setItems([
+                new ArrayType,
+                new ObjectType,
+            ]));
+
+        $operation = Operation::make('get')->addResponse(
+            Response::make(200)->setContent('application/json', Schema::fromType($identityType))
+        );
+
+        $this->extension()->handle($operation, $this->routeInfo('show'));
+
+        $schema = $operation->responses[0]->getContent('application/json')->toArray();
+        $permissionNames = $schema['properties']['data']['properties']['permission_names'];
+
+        $this->assertSame('array', $permissionNames['type']);
+        $this->assertSame(['type' => 'string'], $permissionNames['items']);
+        $this->assertArrayNotHasKey('anyOf', $permissionNames);
+    }
+
+    public function test_keeps_unconfigured_business_field_schema_unchanged(): void
+    {
+        $identityType = (new ObjectType)
+            ->addProperty('user', new ObjectType)
+            ->addProperty('permission_names', (new AnyOf)->setItems([
+                new ArrayType,
+                new ObjectType,
+            ]));
+
+        $operation = Operation::make('get')->addResponse(
+            Response::make(200)->setContent('application/json', Schema::fromType($identityType))
+        );
+
+        $this->extension()->handle($operation, $this->routeInfo('show'));
+
+        $schema = $operation->responses[0]->getContent('application/json')->toArray();
+        $permissionNames = $schema['properties']['data']['properties']['permission_names'];
+
+        $this->assertArrayHasKey('anyOf', $permissionNames);
     }
 
     private function extension(): BusinessResponseOperationExtension
