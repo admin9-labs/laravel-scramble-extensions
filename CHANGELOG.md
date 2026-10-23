@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Explicit `ClosedObjectType` for business response objects with `additionalProperties: false`, with conflicting typed additional properties rejected during serialization.
 - Explicit `ReadOnlyIntegerType` and reusable `ReadOnlySerialization` for business response schema customization, compatible with legacy and OpenAPI 3.1/3.2 serializers.
 
 ## v0.3.2 - 2026-06-30

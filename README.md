@@ -255,6 +255,21 @@ $schema = (new ObjectType)->addProperty('id', (new ReadOnlyIntegerType)->format(
 
 这些类型用于显式定制业务契约，不自动推断只读字段。请直接保留子类实例；将属性通过 `addProperties()` 复制到普通类型不会复制子类的只读行为。
 
+需要声明不接受额外字段的对象时，使用 `ClosedObjectType`：
+
+```php
+use Admin9\ScrambleExtensions\Schema\Types\ClosedObjectType;
+use Dedoc\Scramble\Support\Generator\Types\StringType;
+
+$schema = (new ClosedObjectType)
+    ->addProperty('name', new StringType)
+    ->setRequired(['name']);
+```
+
+该对象输出标准 `additionalProperties: false`；嵌套对象如需关闭额外字段，也要显式使用 `ClosedObjectType`。已有属性、必填项和引用保持不变。它只影响文档，不替代请求验证。
+
+不要同时设置 `additionalProperties(new StringType)` 等额外属性类型；这种矛盾配置会在序列化时抛出 `LogicException`。普通 `ObjectType` 仍支持带类型的额外属性。
+
 ## License
 
 MIT
