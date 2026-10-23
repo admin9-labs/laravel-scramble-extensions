@@ -238,6 +238,23 @@ class UserController extends Controller
 
 该能力依赖数据库驱动能通过 Laravel schema builder 返回 `comment` 字段；不支持字段注释的驱动会安全跳过。
 
+### 5. 显式业务 Schema 类型
+
+在定制业务响应 schema 时，可以显式使用只读整数类型：
+
+```php
+use Admin9\ScrambleExtensions\Schema\Types\ReadOnlyIntegerType;
+use Dedoc\Scramble\Support\Generator\Types\ObjectType;
+
+$schema = (new ObjectType)->addProperty('id', (new ReadOnlyIntegerType)->format('int64'));
+```
+
+生成的 `id` schema 包含标准 `readOnly: true`，并保留整数类型的约束。这只是文档声明，不会改变运行时验证或响应。
+
+调用方可以在自己的 Scramble 类型子类中使用 `Admin9\ScrambleExtensions\Schema\Concerns\ReadOnlySerialization` trait，例如为字符串字段声明只读。trait 面向 Scramble 的类型序列化 API，兼容本包支持的旧序列化入口及 OpenAPI 3.1/3.2 入口。
+
+这些类型用于显式定制业务契约，不自动推断只读字段。请直接保留子类实例；将属性通过 `addProperties()` 复制到普通类型不会复制子类的只读行为。
+
 ## License
 
 MIT
