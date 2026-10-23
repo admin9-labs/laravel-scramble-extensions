@@ -19,6 +19,11 @@ class CommentedModel extends Model
             {
                 return new class
                 {
+                    public function hasTable(string $table): bool
+                    {
+                        return true;
+                    }
+
                     public function getColumns(string $table): array
                     {
                         return [
