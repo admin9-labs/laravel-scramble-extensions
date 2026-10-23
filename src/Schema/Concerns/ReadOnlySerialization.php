@@ -18,7 +18,7 @@ trait ReadOnlySerialization
             ? parent::serializeAs31()
             : parent::toArray();
 
-        return [...$schema, 'readOnly' => true];
+        return [...(array) $schema, 'readOnly' => true];
     }
 
     public function serializeAs32(): mixed
@@ -27,6 +27,6 @@ trait ReadOnlySerialization
             ? parent::serializeAs32()
             : parent::toArray();
 
-        return [...$schema, 'readOnly' => true];
+        return [...(array) $schema, 'readOnly' => true];
     }
 }
